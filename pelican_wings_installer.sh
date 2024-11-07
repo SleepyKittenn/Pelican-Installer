@@ -13,7 +13,7 @@ prompt() {
 # Prompt for user input
 prompt "Enter your domain" DOMAIN "your-domain.com"
 prompt "Enter your email for Let's Encrypt" EMAIL "admin@$DOMAIN"
-prompt "Enter the auto deploy command" AUTO_DEPLOY "your-auto-deploy-command"
+prompt "Enter the auto deploy command (Standalone)" AUTO_DEPLOY "your-auto-deploy-command"
 
 # Install Docker
 curl -sSL https://get.docker.com/ | CHANNEL=stable sudo sh
