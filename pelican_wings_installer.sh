@@ -40,8 +40,14 @@ cd /etc/pelican
 sudo curl -L -o /usr/local/bin/wings "https://github.com/pelican-dev/wings/releases/latest/download/wings_linux_$([[ \"$(uname -m)\" == \"x86_64\" ]] && echo \"amd64\" || echo \"arm64\")"
 sudo chmod u+x /usr/local/bin/wings
 
+# Change to the /etc/pelican directory again
+cd /etc/pelican
+
 # Run the auto deploy command
 $AUTO_DEPLOY
+
+# Change to the /etc/pelican directory again
+cd /etc/pelican
 
 # Run Wings in debug mode for 5 seconds
 sudo /usr/local/bin/wings --debug &
@@ -70,6 +76,9 @@ RestartSec=5s
 [Install]
 WantedBy=multi-user.target
 EOL"
+
+# Change to the /etc/pelican directory again
+cd /etc/pelican
 
 # Enable and start the Wings service
 sudo systemctl enable --now wings
