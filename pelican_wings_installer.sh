@@ -43,8 +43,8 @@ WINGS_URL="https://github.com/pelican-dev/wings/releases/latest/download/wings_l
 # Print the URL to verify
 echo "Downloading Wings from: $WINGS_URL"
 
-# Download and install Wings using wget
-sudo wget -O /usr/local/bin/wings "$WINGS_URL"
+# Download and install Wings using wget with a progress bar
+sudo wget --progress=dot:giga -O /usr/local/bin/wings "$WINGS_URL"
 sudo chmod u+x /usr/local/bin/wings
 
 # Verify the downloaded Wings binary
