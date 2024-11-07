@@ -31,8 +31,8 @@ curl -L https://github.com/pelican-dev/panel/releases/latest/download/panel.tar.
 # Install Composer
 curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer
 
-# Install PHP dependencies
-sudo composer install --no-dev --optimize-autoloader
+# Install PHP dependencies with environment variable to bypass root warning
+sudo COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --optimize-autoloader
 
 # Disable default site
 sudo a2dissite 000-default.conf
