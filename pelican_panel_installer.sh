@@ -37,21 +37,32 @@ sudo composer install --no-dev --optimize-autoloader
 # Disable default site
 sudo a2dissite 000-default.conf
 
+# Create Apache configuration file for Pelican Panel (Port 80 setup first)
+sudo bash -c "cat <<EOL > /etc/apache2/sites-available/pelican.conf
+<VirtualHost *:80>
+    ServerName $DOMAIN
+    DocumentRoot \"/var/www/pelican/public\"
+
+    <Directory \"/var/www/pelican/public\">
+        Require all granted
+        AllowOverride all
+    </Directory>
+</VirtualHost>
+EOL"
+
+# Enable the site and restart Apache to apply initial setup
+sudo ln -s /etc/apache2/sites-available/pelican.conf /etc/apache2/sites-enabled/pelican.conf
+sudo a2enmod rewrite
+sudo systemctl restart apache2
+
 # Install Certbot for SSL
 sudo apt install -y python3-certbot-apache
 
 # Obtain SSL certificate
 sudo certbot certonly --apache -d $DOMAIN -m $ADMIN_EMAIL --agree-tos --non-interactive
 
-# Create Apache configuration file for Pelican Panel
-sudo bash -c "cat <<EOL > /etc/apache2/sites-available/pelican.conf
-<VirtualHost *:80>
-    ServerName $DOMAIN
-
-    RewriteEngine On
-    RewriteCond %{HTTPS} !=on
-    RewriteRule ^/?(.*) https://%{SERVER_NAME}/$1 [R,L]
-</VirtualHost>
+# Add SSL configuration to Apache configuration file
+sudo bash -c "cat <<EOL >> /etc/apache2/sites-available/pelican.conf
 
 <VirtualHost *:443>
     ServerName $DOMAIN
@@ -74,8 +85,6 @@ sudo bash -c "cat <<EOL > /etc/apache2/sites-available/pelican.conf
 EOL"
 
 # Enable site and modules, then restart Apache
-sudo ln -s /etc/apache2/sites-available/pelican.conf /etc/apache2/sites-enabled/pelican.conf
-sudo a2enmod rewrite
 sudo systemctl restart apache2
 
 # Set permissions
