@@ -29,9 +29,31 @@ sudo systemctl enable --now docker
 # Create necessary directories for Wings
 sudo mkdir -p /etc/pelican /var/run/wings
 
-# Download and install Wings
-sudo curl -L -o /usr/local/bin/wings "https://github.com/pelican-dev/wings/releases/latest/download/wings_linux_$([[ \"$(uname -m)\" == \"x86_64\" ]] && echo \"amd64\" || echo \"arm64\")"
+# Determine the architecture
+ARCH=$(uname -m)
+if [ "$ARCH" == "x86_64" ]; then
+    ARCH="amd64"
+else
+    ARCH="arm64"
+fi
+
+# Construct the download URL
+WINGS_URL="https://github.com/pelican-dev/wings/releases/latest/download/wings_linux_$ARCH"
+
+# Print the URL to verify
+echo "Downloading Wings from: $WINGS_URL"
+
+# Download and install Wings using wget
+sudo wget -O /usr/local/bin/wings "$WINGS_URL"
 sudo chmod u+x /usr/local/bin/wings
+
+# Verify the downloaded Wings binary
+if file /usr/local/bin/wings | grep -q 'ELF'; then
+    echo "Wings binary downloaded successfully."
+else
+    echo "Wings binary download failed, please check the URL or network connection."
+    exit 1
+fi
 
 # Output completion message
 echo "Wings installation complete. Please visit https://github.com/SleepyKittenn/Pelican-Installer/blob/master/README.md and read the 'AFTER WINGS INSTALLATION' section for further steps."
