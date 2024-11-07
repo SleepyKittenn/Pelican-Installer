@@ -14,64 +14,42 @@ prompt() {
 prompt "Enter your panel domain" DOMAIN "your-domain.com"
 prompt "Enter your email for Let's Encrypt" ADMIN_EMAIL "admin@$DOMAIN"
 
-# Update the system
+# Update the system and install necessary packages
 sudo apt update
 sudo apt upgrade -y
-
-# Install required packages
 sudo apt install -y apache2 mariadb-server php libapache2-mod-php mariadb-client php-gd php-mysql php-mbstring php-bcmath php-xml php-curl php-zip php-intl php-sqlite3 php-fpm curl composer
 
-# Create a directory for Pelican Panel
+# Create the directory for Pelican Panel
 sudo mkdir -p /var/www/pelican
 cd /var/www/pelican
 
-# Download Pelican Panel
+# Download and extract Pelican Panel
 curl -L https://github.com/pelican-dev/panel/releases/latest/download/panel.tar.gz | sudo tar -xzv
 
 # Install Composer
 curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer
 
-# Install PHP dependencies with environment variable to bypass root warning
+# Install PHP dependencies
 sudo COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --optimize-autoloader
-
-# Disable default site
-sudo a2dissite 000-default.conf
-
-# Create Apache configuration file for Pelican Panel (Port 80 setup first)
-sudo bash -c "cat <<EOL > /etc/apache2/sites-available/pelican.conf
-<VirtualHost *:80>
-    ServerName $DOMAIN
-    DocumentRoot \"/var/www/pelican/public\"
-
-    <Directory \"/var/www/pelican/public\">
-        Require all granted
-        AllowOverride all
-    </Directory>
-</VirtualHost>
-EOL"
-
-# Enable the site and restart Apache to apply initial setup
-sudo ln -s /etc/apache2/sites-available/pelican.conf /etc/apache2/sites-enabled/pelican.conf
-sudo a2enmod rewrite
-sudo systemctl restart apache2
-
-# Validate Apache configuration before proceeding
-if ! sudo apache2ctl configtest; then
-    echo "Apache configuration error. Please check your configuration."
-    exit 1
-fi
 
 # Install Certbot for SSL
 sudo apt install -y python3-certbot-apache
 
-# Enable mod_ssl
-sudo a2enmod ssl
-
 # Obtain SSL certificate
 sudo certbot certonly --apache -d $DOMAIN -m $ADMIN_EMAIL --agree-tos --non-interactive
 
-# Add SSL configuration to Apache configuration file
-sudo bash -c "cat <<EOL >> /etc/apache2/sites-available/pelican.conf
+# Disable default site
+sudo a2dissite 000-default.conf
+
+# Create Apache configuration file for Pelican Panel
+sudo bash -c "cat <<EOL > /etc/apache2/sites-available/pelican.conf
+<VirtualHost *:80>
+    ServerName $DOMAIN
+
+    RewriteEngine On
+    RewriteCond %{HTTPS} !=on
+    RewriteRule ^/?(.*) https://%{SERVER_NAME}/$1 [R,L]
+</VirtualHost>
 
 <VirtualHost *:443>
     ServerName $DOMAIN
@@ -93,18 +71,20 @@ sudo bash -c "cat <<EOL >> /etc/apache2/sites-available/pelican.conf
 </VirtualHost>
 EOL"
 
-# Validate Apache configuration again before final restart
-if ! sudo apache2ctl configtest; then
-    echo "Apache configuration error after SSL setup. Please check your configuration."
-    exit 1
-fi
+# Enable required Apache modules
+sudo a2enmod ssl
+sudo a2enmod rewrite
 
-# Restart Apache to apply final configuration
+# Restart Apache to apply changes
 sudo systemctl restart apache2
 
+# Set up environment for Pelican Panel
+cd /var/www/pelican
+sudo php artisan p:environment:setup
+
 # Set permissions
+sudo chmod -R 755 storage/* bootstrap/cache/
 sudo chown -R www-data:www-data /var/www/pelican
-sudo chmod -R 755 /var/www/pelican/storage /var/www/pelican/bootstrap/cache
 
 # Output completion message
 echo "Pelican Panel installation complete. Please visit http://$DOMAIN/installer to finish the setup."
