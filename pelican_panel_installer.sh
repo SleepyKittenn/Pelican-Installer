@@ -17,7 +17,7 @@ prompt "Enter your email for Let's Encrypt" ADMIN_EMAIL "admin@$DOMAIN"
 # Update the system and install necessary packages
 sudo apt update
 sudo apt upgrade -y
-sudo apt install -y apache2 mariadb-server php libapache2-mod-php mariadb-client php-gd php-mysql php-mbstring php-bcmath php-xml php-curl php-zip php-intl php-sqlite3 php-fpm curl composer
+sudo apt install -y apache2 mariadb-server php libapache2-mod-php mariadb-client php-gd php-mysql php-mbstring php-bcmath php-xml php-curl php-zip php-intl php-sqlite3 php-fpm
 
 # Create the directory for Pelican Panel
 sudo mkdir -p /var/www/pelican
@@ -71,7 +71,8 @@ sudo bash -c "cat <<EOL > /etc/apache2/sites-available/pelican.conf
 </VirtualHost>
 EOL"
 
-# Enable required Apache modules
+# Enable the site and required modules
+sudo ln -s /etc/apache2/sites-available/pelican.conf /etc/apache2/sites-enabled/pelican.conf
 sudo a2enmod ssl
 sudo a2enmod rewrite
 
