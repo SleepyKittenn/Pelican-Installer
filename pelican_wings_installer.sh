@@ -97,4 +97,4 @@ cd /etc/pelican
 sudo systemctl enable --now wings
 
 # Output completion message
-echo "Wings installation complete.
+echo "Wings installation complete."
