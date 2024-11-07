@@ -55,8 +55,17 @@ sudo ln -s /etc/apache2/sites-available/pelican.conf /etc/apache2/sites-enabled/
 sudo a2enmod rewrite
 sudo systemctl restart apache2
 
+# Validate Apache configuration before proceeding
+if ! sudo apache2ctl configtest; then
+    echo "Apache configuration error. Please check your configuration."
+    exit 1
+fi
+
 # Install Certbot for SSL
 sudo apt install -y python3-certbot-apache
+
+# Enable mod_ssl
+sudo a2enmod ssl
 
 # Obtain SSL certificate
 sudo certbot certonly --apache -d $DOMAIN -m $ADMIN_EMAIL --agree-tos --non-interactive
@@ -84,7 +93,13 @@ sudo bash -c "cat <<EOL >> /etc/apache2/sites-available/pelican.conf
 </VirtualHost>
 EOL"
 
-# Enable site and modules, then restart Apache
+# Validate Apache configuration again before final restart
+if ! sudo apache2ctl configtest; then
+    echo "Apache configuration error after SSL setup. Please check your configuration."
+    exit 1
+fi
+
+# Restart Apache to apply final configuration
 sudo systemctl restart apache2
 
 # Set permissions
