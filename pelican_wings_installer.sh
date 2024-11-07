@@ -13,7 +13,13 @@ prompt() {
 # Prompt for user input
 prompt "Enter your domain" DOMAIN "your-domain.com"
 prompt "Enter your email for Let's Encrypt" EMAIL "admin@$DOMAIN"
-prompt "Enter the auto deploy command (Standalone)" AUTO_DEPLOY "your-auto-deploy-command"
+prompt "Enter the auto deploy command" AUTO_DEPLOY "your-auto-deploy-command"
+
+# Install Certbot
+sudo apt install -y python3-certbot-apache
+
+# Obtain SSL certificate
+sudo certbot certonly --apache -d $DOMAIN -m $EMAIL --agree-tos --non-interactive
 
 # Install Docker
 curl -sSL https://get.docker.com/ | CHANNEL=stable sudo sh
@@ -28,14 +34,13 @@ sudo mkdir -p /etc/pelican /var/run/wings
 sudo curl -L -o /usr/local/bin/wings "https://github.com/pelican-dev/wings/releases/latest/download/wings_linux_$([[ \"$(uname -m)\" == \"x86_64\" ]] && echo \"amd64\" || echo \"arm64\")"
 sudo chmod u+x /usr/local/bin/wings
 
-# Install Certbot
-sudo apt install -y python3-certbot-apache
-
-# Obtain SSL certificate
-sudo certbot certonly --apache -d $DOMAIN -m $EMAIL --agree-tos --non-interactive
-
 # Run the auto deploy command
 $AUTO_DEPLOY
+
+# Run Wings in debug mode for 5 seconds
+sudo /usr/local/bin/wings --debug &
+sleep 5
+sudo pkill -f '/usr/local/bin/wings --debug'
 
 # Create systemd service file for Wings
 sudo bash -c "cat <<EOL > /etc/systemd/system/wings.service
@@ -62,7 +67,6 @@ EOL"
 
 # Enable and start the Wings service
 sudo systemctl enable --now wings
-sudo systemctl restart wings
 
 # Output completion message
 echo "Wings installation complete."
