@@ -21,7 +21,8 @@ sudo apt install -y python3-certbot-apache
 # Obtain SSL certificate
 sudo certbot certonly --apache -d $DOMAIN -m $EMAIL --agree-tos --non-interactive
 
-# Change to the /etc/pelican directory
+# Change to the /etc/pelican directory (creating it if necessary)
+sudo mkdir -p /etc/pelican
 cd /etc/pelican
 
 # Install Docker
@@ -30,11 +31,8 @@ curl -sSL https://get.docker.com/ | CHANNEL=stable sudo sh
 # Enable Docker to start on boot
 sudo systemctl enable --now docker
 
-# Create necessary directories
+# Create necessary directories for Wings
 sudo mkdir -p /etc/pelican /var/run/wings
-
-# Change to the /etc/pelican directory again
-cd /etc/pelican
 
 # Download and install Wings
 sudo curl -L -o /usr/local/bin/wings "https://github.com/pelican-dev/wings/releases/latest/download/wings_linux_$([[ \"$(uname -m)\" == \"x86_64\" ]] && echo \"amd64\" || echo \"arm64\")"
@@ -45,9 +43,6 @@ cd /etc/pelican
 
 # Run the auto deploy command
 $AUTO_DEPLOY
-
-# Change to the /etc/pelican directory again
-cd /etc/pelican
 
 # Run Wings in debug mode for 5 seconds
 sudo /usr/local/bin/wings --debug &
