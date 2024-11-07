@@ -13,6 +13,7 @@ prompt() {
 # Prompt for user input
 prompt "Enter your domain" DOMAIN "your-domain.com"
 prompt "Enter your email for Let's Encrypt" EMAIL "admin@$DOMAIN"
+prompt "Enter the auto deploy command" AUTO_DEPLOY "your-auto-deploy-command"
 
 # Install Certbot
 sudo apt install -y python3-certbot-apache
@@ -55,5 +56,45 @@ else
     exit 1
 fi
 
+# Change to the /etc/pelican directory
+cd /etc/pelican
+
+# Run the auto deploy command
+$AUTO_DEPLOY
+
+# Run Wings in debug mode for 5 seconds to check for errors
+sudo /usr/local/bin/wings --debug &
+sleep 5
+sudo pkill -f '/usr/local/bin/wings --debug'
+
+# Create systemd service file for Wings
+sudo bash -c "cat <<EOL > /etc/systemd/system/wings.service
+[Unit]
+Description=Wings Daemon
+After=docker.service
+Requires=docker.service
+PartOf=docker.service
+
+[Service]
+User=root
+WorkingDirectory=/etc/pelican
+LimitNOFILE=4096
+PIDFile=/var/run/wings/daemon.pid
+ExecStart=/usr/local/bin/wings
+Restart=on-failure
+StartLimitInterval=180
+StartLimitBurst=30
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
+EOL"
+
+# Change to the /etc/pelican directory again
+cd /etc/pelican
+
+# Enable and start the Wings service
+sudo systemctl enable --now wings
+
 # Output completion message
-echo "Wings installation complete. Please visit https://github.com/SleepyKittenn/Pelican-Installer/blob/master/README.md and read the 'AFTER WINGS INSTALLATION' section for further steps."
+echo "Wings installation complete.
