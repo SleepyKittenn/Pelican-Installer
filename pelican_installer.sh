@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# Function to download a script from GitHub
 download_script() {
     local SCRIPT_URL="$1"
     local SCRIPT_NAME="$2"
@@ -8,7 +7,6 @@ download_script() {
     chmod +x "$SCRIPT_NAME"
 }
 
-# Function to prompt user for input
 prompt() {
     local PROMPT_MESSAGE="$1"
     local VAR_NAME="$2"
@@ -18,14 +16,11 @@ prompt() {
     eval "$VAR_NAME='$input'"
 }
 
-# GitHub repository URL
 REPO_URL="https://raw.githubusercontent.com/SleepyKittenn/Pelican-Installer/master"
 
-# Download the installer scripts
 download_script "$REPO_URL" "pelican_panel_installer.sh"
 download_script "$REPO_URL" "pelican_wings_installer.sh"
 
-# Prompt user to choose the installer
 echo "Choose an option:"
 echo "1) Panel Installer"
 echo "2) Wings Installer"
